@@ -16,7 +16,7 @@ import logging
 import random
 import json
 
-import _myutils
+from myutils import _myutils
 from grammar_graph import *
 
 
