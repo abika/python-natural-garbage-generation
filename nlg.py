@@ -3,6 +3,7 @@
 
 """
 
+
 Created on Thu Mar 31 16:10:53 2016
 
 @author: Alexander Bikadorov
@@ -14,26 +15,49 @@ import logging
 
 import _myutils
 
+import enum
 import random
 import json
 
-
-#class GrammaGraph:
-    #def __init__(self, root):
-        #self.root = root
-
+class Operation(enum.Enum):
+    and_ = '+'
+    or_ = '|'
+    optional = ''
 
 class Node:
-    def __init__(self, value, children=[]):
+    def __init__(self, value):
         self.value = value
-        self.child_nodes = children
+        self.child_nodes = []
+        self.p = -1
 
-    def traverse(self):
-        return self.value if not self.child_nodes else [child.traverse() for child in self.child_nodes]
+    def set_edges(self, op, children, p=-1):
+        self.op = op
+        self.child_nodes = children
+        self.p = p
+
+    def traverse(self, level=0):
+        if self.op == Operation.or_:
+            rc = 0 if random.random() <= (self.p ** (1.0 / level)) else 1
+            return self.child_nodes[rc].traverse(level+1)
+        else:
+            return [child.traverse(level+1) for child in self.child_nodes]
 
     def __repr__(self):
-        v = str(self.value)
-        return "<EndNode L:" + v + ">" if not self.child_nodes else "<Node V:" + v + " C:" + str(self.child_nodes) + ">"
+        return "<Node V:" + str(self.value) + " C:" + str(self.child_nodes) + ">"
+
+    def __str__(self):
+        return str(self.value) + "#:" + str(self.child_nodes)
+
+class Literal(Node):
+
+    def __init__(self, value):
+        super(Literal, self).__init__(value)
+
+    def traverse(self, level):
+        return self.value
+
+    def __repr__(self):
+        return "<Literal L:" + str(self.value) + ">"
 
     def __str__(self):
         return str(self.value) + "#:" + str(self.child_nodes)
@@ -41,40 +65,46 @@ class Node:
 
 def _arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='enable debug output')
-    parser.add_argument('grammar_file', metavar='grammar-file', type=str, help='plain text file containing grammar in simple BNF form')
-    parser.add_argument('words_file', metavar='words-file', type=str, help='word list file for all syntax literals in JSON format')
+    parser.add_argument('-d', '--debug', action='store_true',
+        help='enable debug output')
+    parser.add_argument('-n','--number', default=10, metavar='grammar-file',
+        type=str, help='number of sentences to generate')
+    parser.add_argument('grammar_file', metavar='grammar-file', type=str,
+        help='plain text file containing grammar in simple BNF form')
+    parser.add_argument('words_file', metavar='words-file', type=str,
+        help='word list file for all syntax literals in JSON format')
     return parser.parse_args()
 
 
-def _build_gramma_graph(gramma_lines):
-    def rec_builder(symb, gramma_dict):
-        #head, *tail = lines
-        if symb not in gramma_dict:
-            # leaf (or recursive!)
-            return Node(symb)
+def _build_gramma_graph(gramma_rules):
+    def get_child_nodes(elements):
+        return [nodes_dict.get(child_symb, Literal(child_symb)) for child_symb in elements]
 
-        expr = gramma_dict.pop(symb)
-        and_symbols = expr.split()
-        #logging.debug("building node: " + symb + " := " + str(and_symbols))
-        #gen = (cs for cs in and_symbols if cs in gramma_dict)
-        childs = [rec_builder(child_symb, gramma_dict) for child_symb in and_symbols]
-
-        return Node(symb, childs)
-
-    symb_exp_list = [l.split('=', 1) for l in gramma_lines]
-    symb_exp_list = [(s.strip(), ex.strip()) for s, ex in symb_exp_list]
-    gramma_dict = dict(symb_exp_list)
-    logging.debug("gramma dict: " + str(gramma_dict))
-
-    if not symb_exp_list:
-        logging.warning("no gramma rules")
+    if not gramma_rules:
+        logging.warning("no gramma rules for graph")
         return
 
-    start_symb = symb_exp_list[0][0].strip()
+    # create nodes
+    symb_expr_list = [l.split('=', 1) for l in gramma_rules]
+    nodes_expr_list = [(Node(s.strip()), ex) for s, ex in symb_expr_list]
 
-    root_node = rec_builder(start_symb, gramma_dict)
-    return root_node
+    # set edges
+    nodes_dict = dict((node.value, node) for node, _ in nodes_expr_list)
+    for node, expr in nodes_expr_list:
+        expr_elements = expr.split()
+        logging.debug("set: " + str(node) + " := " + str(expr_elements))
+        op = expr_elements[0]
+        if op == Operation.or_.value:
+            p = float(expr_elements[1])
+            child_nodes = get_child_nodes(expr_elements[2:])
+            node.set_edges(Operation.or_, child_nodes, p)
+        # default: and operation
+        else:
+            child_nodes = get_child_nodes(expr_elements[0:])
+            node.set_edges(Operation.and_, child_nodes)
+
+    # start node from first rule
+    return nodes_expr_list[0][0]
 
 
 def _create_abstr_sentence(gramma_graph):
@@ -89,19 +119,23 @@ def main(argv=sys.argv):
     gramma_lines = [l for l in gramma_lines if l and not l.startswith('#')]
     logging.debug("gramma read: " + str(gramma_lines))
 
+    random.seed()
+
     # load gramma
     gramma_graph = _build_gramma_graph(gramma_lines)
     logging.info("graph: " + str(gramma_graph))
 
-    # build abstract sentence
-    literal_list = _create_abstr_sentence(gramma_graph)
-    logging.info("abstract sentence: " + str(literal_list))
-
     words_dict = json.loads(_myutils.read_file(args.words_file))
     logging.debug("words_dict: " + str(words_dict))
 
-    word_list = [random.choice(words_dict[lit]) for lit in literal_list]
-    logging.info("sentence: " + " ".join(word_list) + ".")
+    for _ in range(args.number):
+        # build abstract sentence
+        literal_list = _create_abstr_sentence(gramma_graph)
+        logging.info("abstract sentence: " + str(literal_list))
+
+        # fill with words
+        word_list = [random.choice(words_dict[lit]) for lit in literal_list]
+        logging.info("sentence: " + " ".join(word_list) + ".")
 
     logging.debug("DONE!")
 
