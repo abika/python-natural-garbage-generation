@@ -16,7 +16,7 @@ import logging
 import random
 import json
 
-from myutils import _myutils
+from myutils import file_utils, misc_utils
 from grammar_graph import *
 
 
@@ -65,14 +65,14 @@ def _build_gramma_graph(gramma_rules):
 
 
 def _create_abstr_sentence(gramma_graph):
-    return _myutils.flatten(gramma_graph.traverse())
+    return misc_utils.flatten(gramma_graph.traverse())
 
 
 def main(argv=sys.argv):
     args = _arguments()
     logging.getLogger().setLevel(logging.DEBUG if args.debug else logging.INFO)
 
-    gramma_lines = [l.strip() for l in _myutils.read_file_lines(args.grammar_file)]
+    gramma_lines = [l.strip() for l in file_utils.read_file_lines(args.grammar_file)]
     gramma_lines = [l for l in gramma_lines if l and not l.startswith('#')]
     logging.debug("gramma read: " + str(gramma_lines))
 
@@ -82,7 +82,7 @@ def main(argv=sys.argv):
     gramma_graph = _build_gramma_graph(gramma_lines)
     logging.info("graph: " + str(gramma_graph))
 
-    words_dict = json.loads(_myutils.read_file(args.words_file))
+    words_dict = json.loads(file_utils.read_file(args.words_file))
     logging.debug("words_dict: " + str(words_dict))
 
     for _ in range(args.number):
