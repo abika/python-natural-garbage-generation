@@ -13,61 +13,18 @@ import sys
 import argparse
 import logging
 
-import _myutils
-
-import enum
 import random
 import json
 
-class Operation(enum.Enum):
-    and_ = '+'
-    or_ = '|'
-    optional = ''
-
-class Node:
-    def __init__(self, value):
-        self.value = value
-        self.child_nodes = []
-        self.p = -1
-
-    def set_edges(self, op, children, p=-1):
-        self.op = op
-        self.child_nodes = children
-        self.p = p
-
-    def traverse(self, level=0):
-        if self.op == Operation.or_:
-            rc = 0 if random.random() <= (self.p ** (1.0 / level)) else 1
-            return self.child_nodes[rc].traverse(level+1)
-        else:
-            return [child.traverse(level+1) for child in self.child_nodes]
-
-    def __repr__(self):
-        return "<Node V:" + str(self.value) + " C:" + str(self.child_nodes) + ">"
-
-    def __str__(self):
-        return str(self.value) + "#:" + str(self.child_nodes)
-
-class Literal(Node):
-
-    def __init__(self, value):
-        super(Literal, self).__init__(value)
-
-    def traverse(self, level):
-        return self.value
-
-    def __repr__(self):
-        return "<Literal L:" + str(self.value) + ">"
-
-    def __str__(self):
-        return str(self.value) + "#:" + str(self.child_nodes)
+import _myutils
+from grammar_graph import *
 
 
 def _arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
         help='enable debug output')
-    parser.add_argument('-n','--number', default=10, metavar='grammar-file',
+    parser.add_argument('-n', '--number', default=10, metavar='grammar-file',
         type=str, help='number of sentences to generate')
     parser.add_argument('grammar_file', metavar='grammar-file', type=str,
         help='plain text file containing grammar in simple BNF form')
