@@ -1,0 +1,30 @@
+
+# general rule syntax
+# <symbol> =  {<op> {<arg>}} <symbol>+
+# (symbols without rule are automatically literals)
+
+# first rule defines start symbol
+START = SENTENCE
+
+# alternative/OR with "|" as operation and probability for first symbol
+SENTENCE = | 0.3 SPO SPA
+
+# concatenation/AND without operation
+SPO = subject predicate_akk OBJ_X
+
+OBJ_X = | 0.2 OBJ_AKK_L OBJ_L
+OBJ_L = OBJ_N conjunction OBJ_AKK_L
+OBJ_N = | 0.1 OBJ_AKK_L OBJ_R
+OBJ_R = OBJ_AKK_L comma OBJ_N
+OBJ_AKK_L = | 0.6 OBJ_AKK_E OBJ_AKK_S
+OBJ_AKK_E = | 0.5 OBJ_AKK_E_N OBJ_AKK_E_F
+OBJ_AKK_E_N = adjective_akk_n object_akk_n
+OBJ_AKK_E_F = adjective_akk_f object_akk_f
+OBJ_AKK_S = | 0.3 object_akk_n object_akk_f
+
+SPA = subject predicate ADJ_X
+
+ADJ_X = | 0.2 adjective ADJ_L
+ADJ_L = ADJ_N conjunction adjective
+ADJ_N = | 0.1 adjective ADJ_R
+ADJ_R = adjective comma ADJ_N

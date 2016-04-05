@@ -1,0 +1,18 @@
+{
+    "subject":  ["Ich"],
+
+    "predicate": ["bin", "arbeite", "denke", "verhalte mich", "war und bin"],
+    "predicate_akk": ["zeichne mich aus durch"],
+
+    "adjective": ["ehrgeizig", "klug", "aufgeschlossen", "dynamisch", "flexibel", "mobil", "kommunikativ", "effektiv", "effizient", "pünktlich", "proaktiv", "eigenständig", "schnell",  "zuverlässig", "ehrgeizig", "erfahren", "kenntnissreich", "unternehmerisch", "teamorientiert", "ergebnisorientiert", "zielorientiert"],
+    "adjective_akk_n": ["ehrgeiziges", "kluges", "aufgeschlossenes", "dynamisches", "flexibles", "mobiles", "kommunikatives", "effektives", "effizientes", "proaktives", "eigenständiges", "schnelles", "zuverlässiges", "ehrgeiziges", "erfahrenes", "kenntnissreiches"],
+    "adjective_akk_f": ["dynamische", "kenntnissreiches"],
+
+    "object_akk_n": ["Denken", "Engagement", "Vorgehen"],
+    "object_akk_f": ["Intuition", "Kommunikationsfähigkeit"],
+
+
+    "conjunction": ["und", "sowie"],
+
+    "comma": [","]
+}
