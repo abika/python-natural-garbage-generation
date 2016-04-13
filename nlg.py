@@ -15,6 +15,7 @@ import logging
 
 import random
 import json
+import itertools
 
 from myutils import file_utils, misc_utils
 from grammar_graph import *
@@ -68,6 +69,12 @@ def _create_abstr_sentence(gramma_graph):
     return misc_utils.flatten(gramma_graph.traverse())
 
 
+def join_if(seq, ifcond, delimeter=''):
+    rev = reversed(tuple(misc_utils.window(seq)))
+    g = (delimeter.join((a, b)) if b == ifcond else a for a, b in rev if a != ',')
+    return itertools.chain(reversed(tuple(g)), [seq[-1]])
+
+
 def main(argv=sys.argv):
     args = _arguments()
     logging.getLogger().setLevel(logging.DEBUG if args.debug else logging.INFO)
@@ -80,7 +87,7 @@ def main(argv=sys.argv):
 
     # load gramma
     gramma_graph = _build_gramma_graph(gramma_lines)
-    logging.info("graph: " + str(gramma_graph))
+    logging.debug("graph: " + str(gramma_graph))
 
     words_dict = json.loads(file_utils.read_file(args.words_file))
     logging.debug("words_dict: " + str(words_dict))
@@ -88,11 +95,11 @@ def main(argv=sys.argv):
     for _ in range(args.number):
         # build abstract sentence
         literal_list = _create_abstr_sentence(gramma_graph)
-        logging.info("abstract sentence: " + str(literal_list))
+        #logging.info("abstract sentence: " + str(literal_list))
 
         # fill with words
         word_list = [random.choice(words_dict[lit]) for lit in literal_list]
-        logging.info("sentence: " + " ".join(word_list) + ".")
+        logging.info("sentence: " + " ".join(join_if(word_list, ',')) + ".")
 
     logging.debug("DONE!")
 
