@@ -34,37 +34,6 @@ def _arguments():
     return parser.parse_args()
 
 
-def _build_gramma_graph(gramma_rules):
-    def get_child_nodes(elements):
-        return [nodes_dict.get(child_symb, Literal(child_symb)) for child_symb in elements]
-
-    if not gramma_rules:
-        logging.warning("no gramma rules for graph")
-        return
-
-    # create nodes
-    symb_expr_list = [l.split('=', 1) for l in gramma_rules]
-    nodes_expr_list = [(Node(s.strip()), ex) for s, ex in symb_expr_list]
-
-    # set edges
-    nodes_dict = dict((node.value, node) for node, _ in nodes_expr_list)
-    for node, expr in nodes_expr_list:
-        expr_elements = expr.split()
-        logging.debug("set: " + str(node) + " := " + str(expr_elements))
-        op = expr_elements[0]
-        if op == Operation.or_.value:
-            p = float(expr_elements[1])
-            child_nodes = get_child_nodes(expr_elements[2:])
-            node.set_edges(Operation.or_, child_nodes, p)
-        # default: and operation
-        else:
-            child_nodes = get_child_nodes(expr_elements[0:])
-            node.set_edges(Operation.and_, child_nodes)
-
-    # start node from first rule
-    return nodes_expr_list[0][0]
-
-
 def _create_abstr_sentence(gramma_graph):
     return misc_utils.flatten(gramma_graph.traverse())
 
@@ -84,7 +53,11 @@ def main(argv=sys.argv):
     #logging.debug("gramma read: " + str(gramma_lines))
 
     # load gramma
-    gramma_graph = _build_gramma_graph(gramma_lines)
+    if not gramma_lines:
+        logging.warning("no gramma rules for graph")
+        return
+
+    gramma_graph = Graph.build(gramma_lines)
     #logging.debug("graph: " + str(gramma_graph))
 
     words_dict = json.loads(file_utils.read_file(args.words_file))

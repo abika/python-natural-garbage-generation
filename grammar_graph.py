@@ -57,3 +57,32 @@ class Literal(Node):
 
     def __str__(self):
         return str(self.value) + "|"
+
+
+class Graph(Node):
+
+    @staticmethod
+    def build(gramma_rules):
+        def get_child_nodes(elements):
+            return [nodes_dict.get(child_symb, Literal(child_symb)) for child_symb in elements]
+
+        # create nodes
+        symb_expr_list = [l.split('=', 1) for l in gramma_rules]
+        nodes_expr_list = [(Node(s.strip()), ex) for s, ex in symb_expr_list]
+
+        # set edges
+        nodes_dict = dict((node.value, node) for node, _ in nodes_expr_list)
+        for node, expr in nodes_expr_list:
+            expr_elements = expr.split()
+            op = expr_elements[0]
+            if op == Operation.or_.value:
+                p = float(expr_elements[1])
+                child_nodes = get_child_nodes(expr_elements[2:])
+                node.set_edges(Operation.or_, child_nodes, p)
+            # default: and operation
+            else:
+                child_nodes = get_child_nodes(expr_elements[0:])
+                node.set_edges(Operation.and_, child_nodes)
+
+        # start node from first rule
+        return nodes_expr_list[0][0]
