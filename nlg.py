@@ -13,12 +13,12 @@ import sys
 import argparse
 import logging
 
-import random
 import json
 import itertools
 
 from myutils import file_utils, misc_utils
 from grammar_graph import *
+from sample_seq import *
 
 
 def _arguments():
@@ -81,16 +81,15 @@ def main(argv=sys.argv):
 
     gramma_lines = [l.strip() for l in file_utils.read_file_lines(args.grammar_file)]
     gramma_lines = [l for l in gramma_lines if l and not l.startswith('#')]
-    logging.debug("gramma read: " + str(gramma_lines))
-
-    random.seed()
+    #logging.debug("gramma read: " + str(gramma_lines))
 
     # load gramma
     gramma_graph = _build_gramma_graph(gramma_lines)
-    logging.debug("graph: " + str(gramma_graph))
+    #logging.debug("graph: " + str(gramma_graph))
 
     words_dict = json.loads(file_utils.read_file(args.words_file))
     logging.debug("words_dict: " + str(words_dict))
+    sample_dict = {k: SampleSeq(v) for k, v in words_dict.items()}
 
     for _ in range(args.number):
         # build abstract sentence
@@ -98,7 +97,7 @@ def main(argv=sys.argv):
         #logging.info("abstract sentence: " + str(literal_list))
 
         # fill with words
-        word_list = [random.choice(words_dict[lit]) for lit in literal_list]
+        word_list = [sample_dict[lit].next_rand() for lit in literal_list]
         logging.info("sentence: " + " ".join(join_if(word_list, ',')) + ".")
 
     logging.debug("DONE!")
