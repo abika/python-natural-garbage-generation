@@ -3,26 +3,31 @@
 """
 Syntax graph for language definition used for NLG.
 
+For rule definition see 'example_res/ger_gramma.txt'.
+
 @author: Alexander Bikadorov
 """
 
 import enum
 import random
+import logging
 
 
 class Operation(enum.Enum):
-    "Branching operation of one node."
+    """Branching operation of one node"""
     and_ = '+'
     or_ = '|'
     optional = ''
 
 
 class Node:
-    "One node in graph. Representing a syntax symbol"
-    def __init__(self, value):
+    """One node in graph. Representing a syntax symbol (with value) or an anonymous node inside a
+    rule (without value)."""
+    def __init__(self, value=None):
         self.value = value
         self._child_nodes = []
         self._p = -1
+        self._op = None
 
     def set_edges(self, op, children, p=-1):
         self._op = op
@@ -44,7 +49,7 @@ class Node:
 
 
 class Literal(Node):
-    "End node in graph, representing a syntactic entity."
+    """End node in graph, representing a syntactic entity."""
 
     def __init__(self, value):
         super(Literal, self).__init__(value)
@@ -63,26 +68,50 @@ class Graph(Node):
 
     @staticmethod
     def build(gramma_rules):
-        def get_child_nodes(elements):
-            return [nodes_dict.get(child_symb, Literal(child_symb)) for child_symb in elements]
+        """ Build a grammar graph from a list of rules in BNF-like syntax."""
 
-        # create nodes
+        def get_child_nodes(elements):
+            """ OLD:elements are sub nodes that already exist or literals"""
+            return [get_leaf_node(child_symb) for child_symb in elements]
+
+        def get_leaf_node(symbol):
+            return nodes_dict.get(symbol, Literal(symbol))
+
+        def parse(elements, greedy, node=None):
+            """ Parse one rule line recursive. Anonymous sub nodes are created on the fly"""
+            current_first = elements.pop(0)
+
+            if current_first == Operation.or_.value: # OR: between two choices
+                # next element is probability
+                p = float(elements.pop(0))
+                # parse the two choices
+                first = parse(elements, False)
+                second = parse(elements, False)
+                node.set_edges(Operation.or_, [first, second], p)
+            else:
+
+                if greedy: # AND: all next nodes combined
+                    # consume child until end
+                    child_nodes = [get_leaf_node(current_first)]
+                    while elements:
+                        child_nodes.append(parse(elements, False))
+                    node.set_edges(Operation.and_, child_nodes)
+
+                else: # standalone symbol: literal or node symbol
+                    node = get_leaf_node(current_first)
+
+            return node
+
+        # pre-create non-anonymous nodes for later lookup
         symb_expr_list = [l.split('=', 1) for l in gramma_rules]
         nodes_expr_list = [(Node(s.strip()), ex) for s, ex in symb_expr_list]
 
-        # set edges
         nodes_dict = dict((node.value, node) for node, _ in nodes_expr_list)
+
+        # set edges
         for node, expr in nodes_expr_list:
-            expr_elements = expr.split()
-            op = expr_elements[0]
-            if op == Operation.or_.value:
-                p = float(expr_elements[1])
-                child_nodes = get_child_nodes(expr_elements[2:])
-                node.set_edges(Operation.or_, child_nodes, p)
-            # default: and operation
-            else:
-                child_nodes = get_child_nodes(expr_elements[0:])
-                node.set_edges(Operation.and_, child_nodes)
+            parse(expr.split(), True, node)
+            logging.debug("Node: " + str(node) + " from : " + str(expr))
 
         # start node from first rule
         return nodes_expr_list[0][0]
