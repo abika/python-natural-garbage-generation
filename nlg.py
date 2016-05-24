@@ -38,9 +38,12 @@ def _create_abstr_sentence(gramma_graph):
     return misc_utils.flatten(gramma_graph.traverse())
 
 
-def join_if(seq, ifcond, delimeter=''):
+def join_if(seq, condition, delimiter=''):
+    if not seq:
+        return seq
+
     rev = reversed(tuple(misc_utils.window(seq)))
-    g = (delimeter.join((a, b)) if b == ifcond else a for a, b in rev if a != ',')
+    g = (delimiter.join((a, b)) if b == condition else a for a, b in rev if a != ',')
     return itertools.chain(reversed(tuple(g)), [seq[-1]])
 
 
@@ -48,30 +51,32 @@ def main(argv=sys.argv):
     args = _arguments()
     logging.getLogger().setLevel(logging.DEBUG if args.debug else logging.INFO)
 
+    # read gramma rules
     gramma_lines = [l.strip() for l in file_utils.read_file_lines(args.grammar_file)]
     gramma_lines = [l for l in gramma_lines if l and not l.startswith('#')]
-    #logging.debug("gramma read: " + str(gramma_lines))
+    logging.debug("gramma read: " + str(gramma_lines))
 
-    # load gramma
     if not gramma_lines:
-        logging.warning("no gramma rules for graph")
+        logging.warning("no grammar rules for graph")
         return
 
+    # build gramma
     gramma_graph = Graph.build(gramma_lines)
-    #logging.debug("graph: " + str(gramma_graph))
+    logging.debug("graph: " + str(gramma_graph))
 
+    # read dictionary
     words_dict = json.loads(file_utils.read_file(args.words_file))
     logging.debug("words_dict: " + str(words_dict))
     sample_dict = {k: SampleSeq(v) for k, v in words_dict.items()}
 
     for _ in range(args.number):
-        # build abstract sentence
+        # create abstract sentence
         literal_list = _create_abstr_sentence(gramma_graph)
-        #logging.info("abstract sentence: " + str(literal_list))
+        logging.debug("abstract sentence: " + str(literal_list))
 
         # fill with words
         word_list = [sample_dict[lit].next_rand() for lit in literal_list]
-        logging.info("sentence: " + " ".join(join_if(word_list, ',')) + ".")
+        print(" ".join(join_if(word_list, ',')) + ".")
 
     logging.debug("DONE!")
 
