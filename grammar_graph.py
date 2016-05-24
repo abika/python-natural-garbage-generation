@@ -17,7 +17,7 @@ class Operation(enum.Enum):
     """Branching operation of one node"""
     and_ = '+'
     or_ = '|'
-    optional = ''
+    opt = '['
 
 
 class Node:
@@ -38,6 +38,9 @@ class Node:
         if self._op == Operation.or_:
             rc = 0 if random.random() <= (self._p ** (1.0 / level)) else 1
             return self._child_nodes[rc].traverse(level + 1)
+        elif self._op == Operation.opt:
+            take = True if random.random() <= (self._p ** (1.0 / level)) else False
+            return self._child_nodes[0].traverse(level + 1) if take else []
         else:
             return [child.traverse(level + 1) for child in self._child_nodes]
 
@@ -79,8 +82,11 @@ class Graph(Node):
 
         def parse(elements, greedy, node=None):
             """ Parse one rule line recursive. Anonymous sub nodes are created on the fly"""
-            current_first = elements.pop(0)
+            if not node:
+                # this is an inner anonymous node
+                node = Node()
 
+            current_first = elements.pop(0)
             if current_first == Operation.or_.value: # OR: between two choices
                 # next element is probability
                 p = float(elements.pop(0))
@@ -88,8 +94,13 @@ class Graph(Node):
                 first = parse(elements, False)
                 second = parse(elements, False)
                 node.set_edges(Operation.or_, [first, second], p)
+            elif current_first == Operation.opt.value: # OPTIONAL: with or without
+                # next element is probability
+                p = float(elements.pop(0))
+                # parse the optional node
+                child = parse(elements, False)
+                node.set_edges(Operation.opt, [child], p)
             else:
-
                 if greedy: # AND: all next nodes combined
                     # consume child until end
                     child_nodes = [get_leaf_node(current_first)]
