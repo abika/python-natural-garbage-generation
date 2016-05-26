@@ -3,7 +3,7 @@
 """
 Syntax graph for language definition used for NLG.
 
-For rule definition see 'example_res/ger_gramma.txt'.
+For rule syntax see 'example_res/ger_grammar.txt'.
 
 @author: Alexander Bikadorov
 """
@@ -73,42 +73,53 @@ class Graph(Node):
     def build(gramma_rules):
         """ Build a grammar graph from a list of rules in BNF-like syntax."""
 
-        def get_child_nodes(elements):
-            """ OLD:elements are sub nodes that already exist or literals"""
-            return [get_leaf_node(child_symb) for child_symb in elements]
-
         def get_leaf_node(symbol):
             return nodes_dict.get(symbol, Literal(symbol))
 
         def parse(elements, greedy, node=None):
             """ Parse one rule line recursive. Anonymous sub nodes are created on the fly"""
+            if not elements:
+                # were are already at the end
+                return None
+
             if not node:
                 # this is an inner anonymous node
                 node = Node()
 
             current_first = elements.pop(0)
-            if current_first == Operation.or_.value: # OR: between two choices
+            if current_first == '(':  # grouping with brackets
+                # take all inner elements
+                return parse(elements, True, node)
+
+            elif current_first == ')':
+                # stop aggregation
+                return None
+
+            elif current_first == Operation.or_.value:  # OR: between two choices
                 # next element is probability
                 p = float(elements.pop(0))
                 # parse the two choices
                 first = parse(elements, False)
                 second = parse(elements, False)
                 node.set_edges(Operation.or_, [first, second], p)
-            elif current_first == Operation.opt.value: # OPTIONAL: with or without
+            elif current_first == Operation.opt.value:  # OPTIONAL: with or without
                 # next element is probability
                 p = float(elements.pop(0))
                 # parse the optional node
                 child = parse(elements, False)
                 node.set_edges(Operation.opt, [child], p)
             else:
-                if greedy: # AND: all next nodes combined
+                if greedy:  # AND: all next nodes combined
                     # consume child until end
                     child_nodes = [get_leaf_node(current_first)]
-                    while elements:
-                        child_nodes.append(parse(elements, False))
+                    while True:
+                        next_child = parse(elements, False)
+                        if not next_child:
+                            break
+                        child_nodes.append(next_child)
                     node.set_edges(Operation.and_, child_nodes)
 
-                else: # standalone symbol: literal or node symbol
+                else:  # standalone symbol: literal or node symbol
                     node = get_leaf_node(current_first)
 
             return node
