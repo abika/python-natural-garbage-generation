@@ -1,0 +1,31 @@
+
+# first rule defines start symbol
+START = SENTENCE
+
+# alternative/OR between two choices with "|" as operation and probability for first symbol
+SENTENCE = | 0.2 SPO SPA
+
+# concatenation/AND without operation
+# (symbols without rule are automatically literals)
+SPO = subject predicate_akk OBJ_X
+
+# optional with one square bracket and probability
+#SPA = subject predicate ADJ_X
+SPA = subject predicate ADJ_X [ 0.7 addition
+
+# order of operations; example...
+# T1 = a b | 0.5 c | 0.4 d e f
+# ...is equal too:
+# T1 = a b ( | 0.5 c ( | 0.4 d e )) f
+
+# brackets for grouping aggregation
+OBJ_X = | 0.2 OBJ_AKK_L ( OBJ_N conjunction OBJ_AKK_L )
+OBJ_N = | 0.1 OBJ_AKK_L ( OBJ_AKK_L comma OBJ_N )
+OBJ_AKK_L = | 0.6 OBJ_AKK_E | 0.3 object_akk_n object_akk_f
+OBJ_AKK_E = | 0.5 ( adjective_akk_n object_akk_n ) ( adjective_akk_f object_akk_f )
+
+ADJ_X = | 0.1 adjective ( ADJ_N conjunction [ 0.3 exaggeration adjective )
+ADJ_N = | 0.1 adjective ADJ_R
+# TODO this wont work: AND not detected
+# ADJ_R = [ 0.2 exaggeration adjective comma ADJ_N
+ADJ_R = adjective comma ADJ_N
