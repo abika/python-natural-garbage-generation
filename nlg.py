@@ -35,10 +35,6 @@ def _arguments():
     return parser.parse_args()
 
 
-def _create_abstr_sentence(gramma_graph):
-    return misc_utils.flatten(gramma_graph.traverse())
-
-
 def join_if(seq, condition, delimiter=''):
     if not seq:
         return seq
@@ -69,7 +65,7 @@ def main(argv=sys.argv):
 
     for _ in range(args.number):
         # create abstract sentence
-        literal_list = _create_abstr_sentence(gramma_graph)
+        literal_list = gramma_graph.traverse()
         logging.debug("abstract sentence: " + str(literal_list))
 
         # fill with words

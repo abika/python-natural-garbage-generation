@@ -10,6 +10,7 @@ For rule syntax see 'example_res/ger_grammar.txt'.
 
 import enum
 import random
+import itertools
 import logging
 
 from myutils import misc_utils
@@ -44,7 +45,8 @@ class Node:
             take = True if random.random() <= (self._p ** (1.0 / level)) else False
             return self._child_nodes[0].traverse(level + 1) if take else []
         else:
-            return [child.traverse(level + 1) for child in self._child_nodes]
+            return itertools.chain.from_iterable(
+                child.traverse(level + 1) for child in self._child_nodes)
 
     def __repr__(self):
         return "<Node V:" + str(self.value) + " C:" + str(self._child_nodes) + ">"
@@ -60,7 +62,7 @@ class Literal(Node):
         super(Literal, self).__init__(value)
 
     def traverse(self, level):
-        return self.value
+        yield self.value
 
     def __repr__(self):
         return "<Literal L:" + str(self.value) + ">"
@@ -69,7 +71,13 @@ class Literal(Node):
         return str(self.value) + "|"
 
 
-class Graph(Node):
+class Graph():
+
+    def __init__(self, start_node):
+        self._start_node = start_node
+
+    def traverse(self):
+        return list(self._start_node.traverse())
 
     @staticmethod
     def build(gramma_lines):
@@ -146,4 +154,4 @@ class Graph(Node):
             logging.debug("Node: " + str(node) + " ||created from: " + str(expr))
 
         # start node from first rule
-        return nodes_expr_list[0][0]
+        return Graph(nodes_expr_list[0][0])
