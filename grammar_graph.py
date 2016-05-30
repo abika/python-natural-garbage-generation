@@ -13,7 +13,7 @@ import random
 import itertools
 import logging
 
-from myutils import misc_utils
+from myutils import seq_utils
 
 
 class Graph:
@@ -22,6 +22,7 @@ class Graph:
         self._start_node = start_node
 
     def traverse(self):
+        """Traverse graph from start node and return list of visited literals."""
         return list(self._start_node.traverse())
 
     @staticmethod
@@ -85,7 +86,7 @@ class Graph:
         # split'n'strip symbols and expressions
         symb_expr_list = [tuple(s.strip() for s in l.split('=', 1)) for l in gramma_rules]
         # (only) check for duplicates
-        misc_utils.filter_duplicates(symb_expr_list, 0, True)
+        seq_utils.filter_duplicates(symb_expr_list, 0, True)
         logging.debug("input rules: " + str(symb_expr_list))
 
         # pre-create non-anonymous nodes for later lookup

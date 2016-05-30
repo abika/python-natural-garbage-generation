@@ -13,11 +13,9 @@ Natural language generation - kind of.
 import sys
 import argparse
 import logging
-
 import json
-import itertools
 
-from myutils import file_utils, misc_utils
+from myutils import file_utils, seq_utils
 from grammar_graph import *
 from sample_seq import *
 
@@ -61,7 +59,7 @@ def main(argv=sys.argv):
 
         # fill with words
         word_list = [sample_dict[lit].next_rand() for lit in literal_list]
-        print(" ".join(misc_utils.join_if(word_list, ',')) + ".")
+        print(" ".join(seq_utils.join_if(word_list, ',')) + ".")
 
     logging.debug("DONE!")
 
