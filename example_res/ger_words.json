@@ -3,13 +3,17 @@
 
     "predicate": ["bin", "arbeite", "denke", "verhalte mich", "war und bin", "plane"],
     "predicate_akk": ["zeichne mich aus durch"],
+    "predicate_nom": ["bin", "war schon immer"],
 
-    "adjective": ["ehrgeizig", "klug", "aufgeschlossen", "dynamisch", "flexibel", "mobil", "kommunikativ", "effektiv", "effizient", "pünktlich", "proaktiv", "eigenständig", "schnell",  "zuverlässig", "ehrgeizig", "erfahren", "kenntnissreich", "unternehmerisch", "teamorientiert", "ergebnisorientiert", "zielorientiert"],
-    "adjective_akk_n": ["ehrgeiziges", "kluges", "aufgeschlossenes", "dynamisches", "flexibles", "mobiles", "kommunikatives", "effektives", "effizientes", "proaktives", "eigenständiges", "schnelles", "zuverlässiges", "ehrgeiziges", "erfahrenes", "kenntnissreiches"],
+    "adjective": ["ehrgeizig", "klug", "aufgeschlossen", "dynamisch", "flexibel", "mobil", "kommunikativ", "effektiv", "effizient", "pünktlich", "proaktiv", "eigenständig", "schnell",  "zuverlässig", "ehrgeizig", "erfahren", "kenntnissreich", "unternehmerisch", "teamorientiert", "ergebnisorientiert", "zielorientiert", "erfolgreich"],
+    "adjective_akk_n": ["ehrgeiziges", "kluges", "aufgeschlossenes", "dynamisches", "flexibles", "mobiles", "kommunikatives", "effektives", "effizientes", "proaktives", "eigenständiges", "schnelles", "zuverlässiges", "ehrgeiziges", "erfahrenes", "kenntnissreiches", "planerisches"],
     "adjective_akk_f": ["dynamische", "kenntnissreiches"],
 
-    "object_akk_n": ["Denken", "Engagement", "Vorgehen"],
+    "object_akk_n": ["Denken", "Engagement", "Vorgehen", "Arbeiten"],
     "object_akk_f": ["Intuition", "Kommunikationsfähigkeit"],
+
+    "numeral": ["ein"],
+    "object_nom": ["Querdenker", "Profi", "Teamplayer", "Arbeitstier"],
 
     "conjunction": ["und", "sowie"],
 
@@ -17,5 +21,5 @@
 
     "addition": ["zu jeder Zeit", "während der Arbeit", "nicht nur beruflich sondern auch privat", "in jedem Bereich", "in eigenständiger Arbeit", "in meiner Arbeitsweise", "durch meine langjährige Erfahrung", "in Projekten"],
 
-    "exaggeration": ["sehr", "recht", "äußerst"]
+    "exaggeration": ["sehr", "weiterhin sehr", "recht", "äußerst"]
 }

@@ -7,7 +7,7 @@ SENTENCE = | 0.2 SPO SPA
 
 # concatenation/AND without operation
 # (symbols without rule are automatically literals)
-SPO = subject predicate_akk OBJ_X
+SPO = subject | 0.3 ( predicate_nom numeral object_nom ) ( predicate_akk OBJ_X )
 
 # optional with one square bracket and probability
 #SPA = subject predicate ADJ_X
