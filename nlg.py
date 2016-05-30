@@ -3,8 +3,9 @@
 
 """
 
+Natural language generation - kind of.
 
-Created on Thu Mar 31 16:10:53 2016
+
 
 @author: Alexander Bikadorov
 """
@@ -53,9 +54,6 @@ def main(argv=sys.argv):
 
     # read gramma rules
     gramma_lines = [l.strip() for l in file_utils.read_file_lines(args.grammar_file)]
-    gramma_lines = [l for l in gramma_lines if l and not l.startswith('#')]
-    logging.debug("gramma read: " + str(gramma_lines))
-
     if not gramma_lines:
         logging.warning("no grammar rules for graph")
         return

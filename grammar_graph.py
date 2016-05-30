@@ -12,6 +12,8 @@ import enum
 import random
 import logging
 
+from myutils import misc_utils
+
 
 class Operation(enum.Enum):
     """Branching operation of one node"""
@@ -70,7 +72,7 @@ class Literal(Node):
 class Graph(Node):
 
     @staticmethod
-    def build(gramma_rules):
+    def build(gramma_lines):
         """ Build a grammar graph from a list of rules in BNF-like syntax."""
 
         def get_leaf_node(symbol):
@@ -82,18 +84,19 @@ class Graph(Node):
                 # were are already at the end
                 return None
 
+            current_first = elements.pop(0)
+
+            if current_first == ')':
+                # stop aggregation
+                return None
+
             if not node:
                 # this is an inner anonymous node
                 node = Node()
 
-            current_first = elements.pop(0)
             if current_first == '(':  # grouping with brackets
                 # take all inner elements
                 return parse(elements, True, node)
-
-            elif current_first == ')':
-                # stop aggregation
-                return None
 
             elif current_first == Operation.or_.value:  # OR: between two choices
                 # next element is probability
@@ -110,7 +113,7 @@ class Graph(Node):
                 node.set_edges(Operation.opt, [child], p)
             else:
                 if greedy:  # AND: all next nodes combined
-                    # consume child until end
+                    # consume all children
                     child_nodes = [get_leaf_node(current_first)]
                     while True:
                         next_child = parse(elements, False)
@@ -124,16 +127,23 @@ class Graph(Node):
 
             return node
 
+        # filter comments
+        gramma_rules = [l for l in gramma_lines if l and not l.startswith('#')]
+        # split'n'strip symbols and expressions
+        symb_expr_list = [tuple(s.strip() for s in l.split('=', 1)) for l in gramma_rules]
+        # (only) check for duplicates
+        misc_utils.filter_duplicates(symb_expr_list, 0, True)
+        logging.debug("input rules: " + str(symb_expr_list))
+
         # pre-create non-anonymous nodes for later lookup
-        symb_expr_list = [l.split('=', 1) for l in gramma_rules]
-        nodes_expr_list = [(Node(s.strip()), ex) for s, ex in symb_expr_list]
+        nodes_expr_list = [(Node(s), ex) for s, ex in symb_expr_list]
 
         nodes_dict = dict((node.value, node) for node, _ in nodes_expr_list)
 
         # set edges
         for node, expr in nodes_expr_list:
             parse(expr.split(), True, node)
-            logging.debug("Node: " + str(node) + " from : " + str(expr))
+            logging.debug("Node: " + str(node) + " ||created from: " + str(expr))
 
         # start node from first rule
         return nodes_expr_list[0][0]
