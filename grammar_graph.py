@@ -16,62 +16,7 @@ import logging
 from myutils import misc_utils
 
 
-class Operation(enum.Enum):
-    """Branching operation of one node"""
-    and_ = '+'
-    or_ = '|'
-    opt = '['
-
-
-class Node:
-    """One node in graph. Representing a syntax symbol (with value) or an anonymous node inside a
-    rule (without value)."""
-    def __init__(self, value=None):
-        self.value = value
-        self._child_nodes = []
-        self._p = -1
-        self._op = None
-
-    def set_edges(self, op, children, p=-1):
-        self._op = op
-        self._child_nodes = children
-        self._p = p
-
-    def traverse(self, level=0):
-        if self._op == Operation.or_:
-            rc = 0 if random.random() <= (self._p ** (1.0 / level)) else 1
-            return self._child_nodes[rc].traverse(level + 1)
-        elif self._op == Operation.opt:
-            take = True if random.random() <= (self._p ** (1.0 / level)) else False
-            return self._child_nodes[0].traverse(level + 1) if take else []
-        else:
-            return itertools.chain.from_iterable(
-                child.traverse(level + 1) for child in self._child_nodes)
-
-    def __repr__(self):
-        return "<Node V:" + str(self.value) + " C:" + str(self._child_nodes) + ">"
-
-    def __str__(self):
-        return str(self.value) + "#:" + str(self._child_nodes)
-
-
-class Literal(Node):
-    """End node in graph, representing a syntactic entity."""
-
-    def __init__(self, value):
-        super(Literal, self).__init__(value)
-
-    def traverse(self, level):
-        yield self.value
-
-    def __repr__(self):
-        return "<Literal L:" + str(self.value) + ">"
-
-    def __str__(self):
-        return str(self.value) + "|"
-
-
-class Graph():
+class Graph:
 
     def __init__(self, start_node):
         self._start_node = start_node
@@ -81,7 +26,7 @@ class Graph():
 
     @staticmethod
     def build(gramma_lines):
-        """ Build a grammar graph from a list of rules in BNF-like syntax."""
+        """ Build a grammar graph from a list of rules in EBNF-like syntax."""
 
         def get_leaf_node(symbol):
             return nodes_dict.get(symbol, Literal(symbol))
@@ -155,3 +100,58 @@ class Graph():
 
         # start node from first rule
         return Graph(nodes_expr_list[0][0])
+
+
+class Operation(enum.Enum):
+    """Branching operation of one node"""
+    and_ = '+'
+    or_ = '|'
+    opt = '['
+
+
+class Node:
+    """One node in graph. Representing a syntax symbol (with value) or an anonymous node inside a
+    rule (without value)."""
+    def __init__(self, value=None):
+        self.value = value
+        self._child_nodes = []
+        self._p = -1
+        self._op = None
+
+    def set_edges(self, op, children, p=-1):
+        self._op = op
+        self._child_nodes = children
+        self._p = p
+
+    def traverse(self, level=0):
+        if self._op == Operation.or_:
+            rc = 0 if random.random() <= (self._p ** (1.0 / level)) else 1
+            return self._child_nodes[rc].traverse(level + 1)
+        elif self._op == Operation.opt:
+            take = True if random.random() <= (self._p ** (1.0 / level)) else False
+            return self._child_nodes[0].traverse(level + 1) if take else []
+        else:
+            return itertools.chain.from_iterable(
+                child.traverse(level + 1) for child in self._child_nodes)
+
+    def __repr__(self):
+        return "<Node V:" + str(self.value) + " C:" + str(self._child_nodes) + ">"
+
+    def __str__(self):
+        return str(self.value) + "#:" + str(self._child_nodes)
+
+
+class Literal(Node):
+    """End node in graph, representing a syntactic entity."""
+
+    def __init__(self, value):
+        super(Literal, self).__init__(value)
+
+    def traverse(self, level):
+        yield self.value
+
+    def __repr__(self):
+        return "<Literal L:" + str(self.value) + ">"
+
+    def __str__(self):
+        return str(self.value) + "|"
