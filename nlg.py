@@ -35,15 +35,6 @@ def _arguments():
     return parser.parse_args()
 
 
-def join_if(seq, condition, delimiter=''):
-    if not seq:
-        return seq
-
-    rev = reversed(tuple(misc_utils.window(seq)))
-    g = (delimiter.join((a, b)) if b == condition else a for a, b in rev if a != ',')
-    return itertools.chain(reversed(tuple(g)), [seq[-1]])
-
-
 def main(argv=sys.argv):
     args = _arguments()
     logging.getLogger().setLevel(logging.DEBUG if args.debug else logging.INFO)
@@ -70,7 +61,7 @@ def main(argv=sys.argv):
 
         # fill with words
         word_list = [sample_dict[lit].next_rand() for lit in literal_list]
-        print(" ".join(join_if(word_list, ',')) + ".")
+        print(" ".join(misc_utils.join_if(word_list, ',')) + ".")
 
     logging.debug("DONE!")
 
